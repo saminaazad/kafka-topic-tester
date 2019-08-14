@@ -1,0 +1,25 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Message Schemas</h2>
+        <ul>
+            @foreach (var name in Model.SchemaNames)
+            {
+                <li>@name</li>
+            }
+        </ul>
+    </div>
+    <div class="col-md-12">
+        <h2>Generated Types</h2>
+        <ul>
+            @foreach (var name in Model.TypeNames)
+            {
+                <li>@name</li>
+            }
+        </ul>
+    </div>
+</div>
