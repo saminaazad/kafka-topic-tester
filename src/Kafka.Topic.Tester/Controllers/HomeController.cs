@@ -1,4 +1,5 @@
-﻿using Kafka.Topic.Tester.Models;
+﻿using Kafka.Topic.Tester.Helpers;
+using Kafka.Topic.Tester.Models;
 using Kafka.Topic.Tester.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -21,13 +22,18 @@ namespace Kafka.Topic.Tester.Controllers
             var schemaFiles = Directory.GetFiles(_settings.SchemaDirectory, "*.asvc");
             var typeFiles = Directory.GetFiles(_settings.MessageTypeDirectory, "*.cs");
 
-            ShellHelper.Exexute();
-
             return View(new DashboardViewModel
             {
                 SchemaNames = schemaFiles.Select(file => Path.GetFileNameWithoutExtension(file)).ToArray(),
                 TypeNames = typeFiles.Select(file => Path.GetFileNameWithoutExtension(file)).ToArray()
             });
+        }
+
+        public IActionResult Refresh()
+        {
+            AvroHelper.GenerateAvroTypes(_settings.AvrogenDirectory, _settings.SchemaDirectory);
+
+            return RedirectToAction("Index");
         }
     }
 }

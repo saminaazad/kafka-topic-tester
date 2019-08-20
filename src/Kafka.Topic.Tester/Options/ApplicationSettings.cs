@@ -7,6 +7,8 @@ namespace Kafka.Topic.Tester.Options
 {
     public class ApplicationSettings
     {
+        public string AvrogenDirectory { get; set; }
+
         public string SchemaDirectory { get; set; }
 
         public string MessageTypeDirectory { get; set; }
