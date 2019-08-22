@@ -19,13 +19,10 @@ namespace Kafka.Topic.Tester.Controllers
 
         public IActionResult Index()
         {
-            var schemaFiles = Directory.GetFiles(_settings.SchemaDirectory, "*.asvc");
-            var typeFiles = Directory.GetFiles(_settings.MessageTypeDirectory, "*.cs");
-
             return View(new DashboardViewModel
             {
-                SchemaNames = schemaFiles.Select(file => Path.GetFileNameWithoutExtension(file)).ToArray(),
-                TypeNames = typeFiles.Select(file => Path.GetFileNameWithoutExtension(file)).ToArray()
+                SchemaNames = FIleHelper.GetAllFiles(_settings.SchemaDirectory, Constants.AvroSchemaFileExtension),
+                TypeNames = FIleHelper.GetAllFiles(_settings.MessageTypeDirectory, Constants.AvroTypeFileExtension)
             });
         }
 
@@ -34,6 +31,38 @@ namespace Kafka.Topic.Tester.Controllers
             AvroHelper.GenerateAvroTypes(_settings.AvrogenDirectory, _settings.SchemaDirectory);
 
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult AddSchema(string topic)
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Produce()
+        {
+            ViewData["sample"] = "";
+            return View(new ProducerViewModel
+            {
+                TopicNames = FIleHelper.GetAllFiles(_settings.SchemaDirectory, Constants.AvroSchemaFileExtension)
+            });
+        }
+
+        [HttpGet]
+        public IActionResult Consume(string topic)
+        {
+            return View();
+        }
+
+        public IActionResult Populate(string topicname)
+        {
+            var text = AvroHelper.PopulateAvroJson(topicname);
+            ViewData["sample"] = text;
+            return View("Produce", new ProducerViewModel
+            {
+                TopicNames = FIleHelper.GetAllFiles(_settings.SchemaDirectory, Constants.AvroSchemaFileExtension)
+            });
         }
     }
 }
