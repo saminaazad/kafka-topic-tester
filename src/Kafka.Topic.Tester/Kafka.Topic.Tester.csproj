@@ -18,6 +18,7 @@
   <ItemGroup>
     <Folder Include="MessageTypes\" />
     <Folder Include="MessageSchema\" />
+    <Folder Include="MessageTypes\Zip\MessageTypes\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 

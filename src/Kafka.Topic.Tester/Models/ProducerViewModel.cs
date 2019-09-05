@@ -8,5 +8,9 @@ namespace Kafka.Topic.Tester.Models
     public class ProducerViewModel
     {
         public string[] TopicNames { get; set; }
+
+        public string CurrentTopic { get; set; }
+
+        public string AvroJson { get; set; }
     }
 }

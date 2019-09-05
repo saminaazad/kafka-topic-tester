@@ -1,4 +1,5 @@
 ﻿using Avro.Specific;
+using Kafka.Topic.Tester.Extensions;
 using Kafka.Topic.Tester.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -15,16 +16,14 @@ namespace Kafka.Topic.Tester.Helpers
     {
         private static Dictionary<string, AvroSchema> Topics = new Dictionary<string, AvroSchema>();
 
-        public static void GenerateAvroTypes(string pathToAvrogen, string pathToSchema)
+        public static void GenerateAvroTypes(string pathToAvrogen, string pathToSchema, string destination)
         {   
             string command = $"{pathToAvrogen}\\avrogen"; 
             string[] files = Directory.GetFiles(pathToSchema, "*.asvc");
 
             foreach (var schema in files)
             {
-                AddAvroSchema(schema);
-
-                string args = $"-s {schema} .";
+                string args = $"-s {schema} .\\{destination}";
                 Process process = new Process();
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
@@ -33,60 +32,32 @@ namespace Kafka.Topic.Tester.Helpers
             }            
         }
 
-        private static void AddAvroSchema(string file)
+        public static Dictionary<string, AvroSchema> LoadCurrentSchema(string pathToSchema)
+        {
+            var schema = new Dictionary<string, AvroSchema>();
+
+            string[] files = Directory.GetFiles(pathToSchema, "*.asvc");            
+            foreach(var file in files)
+            {
+                schema.Add(Path.GetFileNameWithoutExtension(file), GetAvroSchema(file));
+            }
+
+            return schema;
+        }
+
+        private static AvroSchema GetAvroSchema(string file)
         {
             var jsonSchema = File.ReadAllText(file, Encoding.UTF8);
-            var schema = JsonConvert.DeserializeObject<AvroSchema>(jsonSchema);
-            var topicname = Path.GetFileNameWithoutExtension(file);
-
-            Topics[topicname] = schema;
+            return JsonConvert.DeserializeObject<AvroSchema>(jsonSchema);
         } 
 
-        public static string PopulateAvroJson(string topicname)
+        public static string PopulateAvroJson(AvroSchema schema)
         {
-            var type = Topics[topicname];
+            var obj = Type.GetType(schema.Type).CreateTypeInstance("Schema");
+            var jsonObject = JObject.Parse(JsonConvert.SerializeObject(obj));
+            jsonObject.RemoveProperties("Schema");
 
-            var obj = Activator.CreateInstance(Type.GetType(type.Type));
-
-            SetProperties(obj);
-
-            var jObj = JObject.Parse(JsonConvert.SerializeObject(obj));
-            RemoveSchemaProp(jObj);
-
-            return jObj.ToString();
-        }
-
-        private static void RemoveSchemaProp(JObject obj)
-        {
-            obj.Remove("Schema");
-
-            foreach(var prop in obj)
-            {
-                
-            }
-        }
-
-        private static void SetProperties(Object obj, PropertyInfo prop = null)
-        {
-            foreach (var property in obj.GetType().GetProperties())
-            {
-                if (property.Name != "Schema" && !property.PropertyType.IsPrimitiveType())
-                {
-                    var value = Activator.CreateInstance(property.PropertyType);
-                    property.SetValue(obj, value);
-                    SetProperties(value);
-                }
-            }
-        }
-
-        static bool IsNullable(this Type type) => Nullable.GetUnderlyingType(type) != null;
-
-        private static bool IsPrimitiveType(this Type type)
-        {
-            if (type == typeof(String) || type.IsInterface || type.IsNullable())
-                return true;
-
-            return type.IsPrimitive;
-        }
+            return jsonObject.ToString();
+        }        
     }
 }
